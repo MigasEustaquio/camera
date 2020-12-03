@@ -6,6 +6,7 @@ import numpy as np
 import pickle
 import RPi.GPIO as GPIO
 from time import sleep
+import datetime
 
 def recog():
 	relay_pin = [26]
@@ -28,10 +29,22 @@ def recog():
 	recognizer.read("data/trainer.yml")
 
 	font = cv2.FONT_HERSHEY_SIMPLEX
+	
+	dirName = "./images/security"
+	
+	if not os.path.exists(dirName):
+		os.makedirs(dirName)
+		print("Directory Created")
 
 	i=0
+	count = 1
 	for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
 		if i >=3:
+			fileName = dirName +"/" + name + "_" + str(datetime.datetime.now().strftime("%H:%M:%S")) +".jpg"
+			cv2.imwrite(fileName, roiGray)
+			cv2.imshow("face", roiGray)
+			cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+			
 			cv2.destroyAllWindows()
 			camera.close()
 			return name
@@ -56,6 +69,16 @@ def recog():
 						else:							
 							nome = name
 							i=1
+				else:
+					if count >=3:
+						cv2.destroyAllWindows()
+						camera.close()
+						return "unknown"
+					fileName = dirName + "/unknown/unknown" + str(count) + "_" + str(datetime.datetime.now().strftime("%H:%M:%S")) +".jpg"
+					cv2.imwrite(fileName, roiGray)
+					cv2.imshow("face", roiGray)
+					cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+					count += 1
 					
 
 			if conf <= 70:
